@@ -1,8 +1,23 @@
 #include "obstaculo.h"
 #include <stdlib.h>
 
+struct Obstaculo_t {
+    /* Posicion */
+    double x;                   // Posicion x (actual)
+    double y;                   // Posicion y (actual)
+
+    /* Dimensiones */
+    DimensionObstaculo_t dim;
+
+    /* Direccion y rapidez de movimiento */
+    Velocidad_t vel;
+
+    /* Tipo de obstaculo */
+    TipoObstaculo_t tipo;
+};
+
 Obstaculo nuevo_obstaculo(Coordenada_t coord_inicial, DimensionObstaculo_t dim, Velocidad_t vel, TipoObstaculo_t tipo) {
-    Obstaculo o = malloc(sizeof(struct obstaculo_t));
+    Obstaculo o = malloc(sizeof(struct Obstaculo_t));
     if (o != NULL) {
         o->x = (double) coord_inicial.x;
         o->y = (double) coord_inicial.y;

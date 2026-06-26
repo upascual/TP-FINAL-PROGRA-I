@@ -1,254 +1,227 @@
 #include "juego.h"
-// ++++++++++++++++++++++++++++++++ERROR (VER OBSTACULOS DIVIDIDOS EN PARTES DE ARIBA Y ABAJO)++++++++++++++++++++++++++++++++++++++++
-void inicializar_juego(game_t *game) 
-{
+
+void inicializar_juego(game_t *game) {
     game->estado = GAME_ON;
     game->vidas = 3;
     game->nivel = 1;
     game->puntaje = 0;
     
-    // Posición inicial de la rana
-    game->rana.fila = TABLERO_FILS - 1;    // Fila 15
-    game->rana.col = TABLERO_COLS / 2;  // Columna 8
+    game->rana.fila = TABLERO_FILS - 1;
+    game->rana.col = TABLERO_COLS / 2;
 
-    game->cant_obstaculos = 0; 
+    // Inicializamos 3 obstáculos de prueba
+    game->cant_obstaculos = 3; 
+
+    // 1. Auto
+    game->obstaculos[0].fila = 12;
+    game->obstaculos[0].col = 0;
+    game->obstaculos[0].largo = 2;
+    game->obstaculos[0].direccion = DIR_RIGHT;
+    game->obstaculos[0].ticks_para_mover = 3; 
+    game->obstaculos[0].contador_ticks = 0;
+    game->obstaculos[0].es_sumergible = 0;
+    game->obstaculos[0].esta_hundido = 0;
+
+    // 2. Tronco
+    game->obstaculos[1].fila = 5;
+    game->obstaculos[1].col = 8;
+    game->obstaculos[1].largo = 3; 
+    game->obstaculos[1].direccion = DIR_LEFT;
+    game->obstaculos[1].ticks_para_mover = 6; 
+    game->obstaculos[1].contador_ticks = 0;
+    game->obstaculos[1].es_sumergible = 0;
+    game->obstaculos[1].esta_hundido = 0;
+
+    // 3. Tortuga
+    game->obstaculos[2].fila = 3;
+    game->obstaculos[2].col = 3;
+    game->obstaculos[2].largo = 2;
+    game->obstaculos[2].direccion = DIR_RIGHT;
+    game->obstaculos[2].ticks_para_mover = 5;
+    game->obstaculos[2].contador_ticks = 0;
+    game->obstaculos[2].es_sumergible = 1; 
+    game->obstaculos[2].esta_hundido = 0;
 
     game->ranas_salvadas = 0;
-    for (int i = 0; i < CANT_MENUFARES; i++) 
-    {
-        game->cunas_ocupadas[i] = 0; // Todas las cunas empiezan vacías
+    
+    int i = 0;
+    while (i < CANT_MENUFARES) {
+        game->cunas_ocupadas[i] = 0;
+        i++;
     }
 }
 
-void mover_rana(game_t *game, direction_t dir) 
-{
-    // MOVIMIENTO HACIA ARRIBA
-    if(dir == DIR_UP) 
-    {
-        if (game->rana.fila > 0) 
-        {
-            game->rana.fila--;
-        }
-        // Si fila == 0 no muere, se lo evalúa verificar_meta() en el main.c
+void mover_rana(game_t *game, direction_t dir) {
+    if(dir == DIR_UP) {
+        if (game->rana.fila > 0) game->rana.fila--;
     }
-    // MOVIMIENTO HACIA ABAJO
-    else if(dir == DIR_DOWN) 
-    {
-        if(game->rana.fila < TABLERO_FILS - 1) 
-        {
-            game->rana.fila++;
-        }
-        else 
-        {
-            rana_muere(game); // Intentó salir por el borde inferior (Fila 15)
-        }
+    else if(dir == DIR_DOWN) {
+        if(game->rana.fila < TABLERO_FILS - 1) game->rana.fila++;
+        else rana_muere(game); 
     }
-    // MOVIMIENTO HACIA LA IZQUIERDA
-    else if(dir == DIR_LEFT) 
-    {
-        if(game->rana.col > 0) 
-        {
-            game->rana.col--;
-        }
-        else 
-        {
-            rana_muere(game); // Intentó salir por el borde izquierdo (Columna 0)
-        }
+    else if(dir == DIR_LEFT) {
+        if(game->rana.col > 0) game->rana.col--;
+        else rana_muere(game); 
     }
-    // MOVIMIENTO HACIA LA DERECHA
-    else if(dir == DIR_RIGHT) 
-    {
-        if(game->rana.col < TABLERO_COLS - 1) 
-        {
-            game->rana.col++;
-        }
-        else 
-        {
-            rana_muere(game); // Intentó salir por el borde derecho (Columna 15)
-        }
+    else if(dir == DIR_RIGHT) {
+        if(game->rana.col < TABLERO_COLS - 1) game->rana.col++;
+        else rana_muere(game); 
     }
 }
-//++++++++++++++++++++++++++++++++++++++++ERROR (VELOCIDADES DISTINTAS ES DE OBSTACULOS)++++++++++++++++++++++++++++++++++++++++++++++
-void actualizar_obstaculos(game_t *game) 
-{
-    // Recorremos todos los obstáculos activos en el juego
-    for (int i = 0; i < game->cant_obstaculos; i++) 
-    {
-        // Guardamos si la rana está parada exactamente sobre este obstáculo antes de moverlo
+
+void actualizar_obstaculos(game_t *game) {
+    int i = 0;
+    while (i < game->cant_obstaculos) {
         int rana_sobre_este_obstaculo = 0;
         
-        // La rana SOLO se mueve con el obstáculo si están en la misma fila Y es la zona del río
-        if (game->obstaculos[i].fila == game->rana.fila && game->rana.fila >= 2 && game->rana.fila <= 6) 
-        {
-            int obs_inicio = game->obstaculos[i].col;
-            int obs_fin = obs_inicio + game->obstaculos[i].largo - 1;
-
-            if (game->rana.col >= obs_inicio && game->rana.col <= obs_fin) 
-            {
-                rana_sobre_este_obstaculo = 1; // Aquí sí es un tronco
+        if (game->obstaculos[i].fila == game->rana.fila && game->rana.fila >= 2 && game->rana.fila <= 6) {
+            int j = 0;
+            while (j < game->obstaculos[i].largo) {
+                int pos_real = (game->obstaculos[i].col + j) % TABLERO_COLS;
+                if (pos_real < 0) pos_real += TABLERO_COLS;
+                
+                if (game->rana.col == pos_real) {
+                    rana_sobre_este_obstaculo = 1; 
+                }
+                j++;
             }
         }
 
-        // MOVIMIENTO HACIA LA DERECHA 
-        if (game->obstaculos[i].direccion == DIR_RIGHT) 
-        {
-            game->obstaculos[i].col++; // Avanza el obstáculo
-            
-            // Si la rana estaba encima, hereda el movimiento (física móvil)
-            if (rana_sobre_este_obstaculo == 1) 
-            {
-                game->rana.col++;
-            }
-            
-            // Si el inicio del objeto salió por completo de la pantalla derecha
-            if (game->obstaculos[i].col > TABLERO_COLS) 
-            {
-                game->obstaculos[i].col = - game->obstaculos[i].largo; 
+        if (game->obstaculos[i].es_sumergible) {
+            if (game->obstaculos[i].contador_ticks % 40 > 20) {
+                game->obstaculos[i].esta_hundido = 1;
+            } else {
+                game->obstaculos[i].esta_hundido = 0;
             }
         }
-        // MOVIMIENTO HACIA LA IZQUIERDA 
-        else if (game->obstaculos[i].direccion == DIR_LEFT) 
-        {
-            game->obstaculos[i].col--; // Retrocede el obstáculo
-            
-            // Si la rana estaba encima, hereda el movimiento
-            if (rana_sobre_este_obstaculo == 1) 
-            {
-                game->rana.col--;
+
+        game->obstaculos[i].contador_ticks++;
+
+        if (game->obstaculos[i].contador_ticks >= game->obstaculos[i].ticks_para_mover) {
+            if (game->obstaculos[i].direccion == DIR_RIGHT) {
+                game->obstaculos[i].col++;
+                if (rana_sobre_este_obstaculo == 1) game->rana.col++;
+                
+                if (game->obstaculos[i].col > TABLERO_COLS) {
+                    game->obstaculos[i].col = -game->obstaculos[i].largo; 
+                }
+            }
+            else if (game->obstaculos[i].direccion == DIR_LEFT) {
+                game->obstaculos[i].col--;
+                if (rana_sobre_este_obstaculo == 1) game->rana.col--;
+                
+                if (game->obstaculos[i].col + game->obstaculos[i].largo < 0) {
+                    game->obstaculos[i].col = TABLERO_COLS; 
+                }
             }
             
-            // Si el final del objeto salió por la izquierda
-            if (game->obstaculos[i].col + game->obstaculos[i].largo < 0) 
-            {
-                game->obstaculos[i].col = TABLERO_COLS; 
+            if (!game->obstaculos[i].es_sumergible) {
+                game->obstaculos[i].contador_ticks = 0;
             }
         }
+        i++;
     }
 
-    // DETECCIÓN DE BORDES POR ARRASTRE 
-    // Si después de mover todos los troncos, la rana fue empujada fuera de la pantalla (0 a 15), muere.
-    if (game->rana.col < 0 || game->rana.col >= TABLERO_COLS) 
-    {
-        ranaMuere(game);
+    if (game->rana.col < 0 || game->rana.col >= TABLERO_COLS) {
+        rana_muere(game);
     }
 }
 
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ERROR (ALGUNAS TORTUGAS SE HUNDEN) ++++++++++++++++++
-int verificar_colisiones(const game_t *game) // Devuelve 1 si la rana perdió una vida (choco o ahogo) y 0 si está a salvo
-{
+int verificar_colisiones(const game_t *game) {
     int rana_f = game->rana.fila;
     int rana_c = game->rana.col;
 
-    // ZONA DE LA CALLE (Filas 8 a 14)
-    if (rana_f >= 8 && rana_f <= 14) 
-    {
-        // Recorremos todos los obstáculos buscando los autos
-        for (int i = 0; i < game->cant_obstaculos; i++) 
-        {
-            //  Si el obstáculo está en la misma fila que la rana
-            if (game->obstaculos[i].fila == rana_f) 
-            {
-                // límites físicos del obstáculo
-                int obs_inicio = game->obstaculos[i].col;
-                int obs_fin = obs_inicio + game->obstaculos[i].largo - 1;
-
-                // Si la columna de la rana es mayor o igual al inicio del auto y 
-                //menor o igual al final del auto CHOQUE
-                if (rana_c >= obs_inicio && rana_c <= obs_fin) 
-                {
-                    return 1; // La rana esta muerta
+    if (rana_f >= 8 && rana_f <= 14) {
+        int i = 0;
+        while (i < game->cant_obstaculos) {
+            if (game->obstaculos[i].fila == rana_f) {
+                int j = 0;
+                while (j < game->obstaculos[i].largo) {
+                    int pos_real = (game->obstaculos[i].col + j) % TABLERO_COLS;
+                    if (pos_real < 0) pos_real += TABLERO_COLS;
+                    
+                    if (rana_c == pos_real) {
+                        return 1; 
+                    }
+                    j++;
                 }
             }
+            i++;
         }
-        return 0; // Si revisó todos los autos y no tocó ninguno, está a viva
+        return 0; 
     }
-
-    // ZONA DEL RÍO (Filas 2 a 6)
-    else if (rana_f >= 2 && rana_f <= 6) 
-    {
-        for (int i = 0; i < game->cant_obstaculos; i++) 
-        {
-            if (game->obstaculos[i].fila == rana_f) 
-            {
-                int obs_inicio = game->obstaculos[i].col;
-                int obs_fin = obs_inicio + game->obstaculos[i].largo - 1;
-
-                // Si la rana coincide con la posición de un tronco
-                if (rana_c >= obs_inicio && rana_c <= obs_fin) 
-                {
-                    return 0;   // Esta sobre un tronco => convida
+    else if (rana_f >= 2 && rana_f <= 6) {
+        int i = 0;
+        while (i < game->cant_obstaculos) {
+            if (game->obstaculos[i].fila == rana_f) {
+                int j = 0;
+                while (j < game->obstaculos[i].largo) {
+                    int pos_real = (game->obstaculos[i].col + j) % TABLERO_COLS;
+                    if (pos_real < 0) pos_real += TABLERO_COLS;
+                    
+                    if (rana_c == pos_real) {
+                        if (game->obstaculos[i].es_sumergible && game->obstaculos[i].esta_hundido) {
+                            return 1; 
+                        } else {
+                            return 0; 
+                        }
+                    }
+                    j++;
                 }
             }
+            i++;
         }
-        
-        // Finalizada la revisión de la fila del río y la rana no esta sobre un tronco => Se cayó al agua
         return 1; 
     }
-
-    // ZONAS SEGURAS (Veredas inicial, media y final)
-    // Si la rana no está ni en el río ni en la calle esta bien.
     return 0; 
 }
 
-int verificar_meta(game_t *game) // Retorna 1 si muere, 0 si está a salvo o no llegó
-{
-    int resultado = 0; // 0 = a salvo o no llegó a la fila, 1 = murió en el intento
+int verificar_meta(game_t *game) {
+    int resultado = 0; 
     
-    // Si llegó a la fila superior
-    if (game->rana.fila == 0) 
-    {
-        // Columnas exactas de tus 5 cunas
+    if (game->rana.fila == 0) {
         const int columnas_cunas[CANT_MENUFARES] = {1, 4, 7, 10, 13};
-        int cuna_encontrada = -1;// Agregamos 'cuna_encontrada == -1' en la condición del bucle para no usar break.
+        int cuna_encontrada = -1;
         
-        // En cuanto encuentra la cuna, la condición se vuelve falsa y el ciclo termina solo.
-        for (int i = 0; i < CANT_MENUFARES && cuna_encontrada == -1; i++) 
-        {
-            if (game->rana.col == columnas_cunas[i]) 
-            {
-                cuna_encontrada = i; // Guarda cuál cuna es (0 a 4)
+        int i = 0;
+        while (i < CANT_MENUFARES && cuna_encontrada == -1) {
+            if (game->rana.col == columnas_cunas[i]) {
+                cuna_encontrada = i; 
             }
+            i++;
         }
-
         
-        if (cuna_encontrada == -1) // Chocó contra la pared y no embocó en ninguna cuna)
-        {
+        if (cuna_encontrada == -1) {
             resultado = 1; 
         }
-        else if (game->cunas_ocupadas[cuna_encontrada] == 1) // La cuna ya estaba ocupada por otra rana previamente salvada
-        {
+        else if (game->cunas_ocupadas[cuna_encontrada] == 1) {
             resultado = 1; 
         }
-        else // Llegó a una cuna libre
-        {
-            game->cunas_ocupadas[cuna_encontrada] = 1; // La marcamos como llena
-            game->ranas_salvadas ++ ;
-            game->puntaje += 200 * game->nivel; // Sumamos puntos
+        else {
+            game->cunas_ocupadas[cuna_encontrada] = 1; 
+            game->ranas_salvadas++;
+            game->puntaje += 200 * game->nivel; 
 
-            // Si salvó las 5 ranas, pasa de nivel y limpia las cunas
-            if (game->ranas_salvadas == CANT_MENUFARES) 
-            {
+            if (game->ranas_salvadas == CANT_MENUFARES) {
                 game->nivel++;
                 game->ranas_salvadas = 0;
-                for (int j = 0; j < CANT_MENUFARES; j++) 
-                {
+                
+                int j = 0;
+                while (j < CANT_MENUFARES) {
                     game->cunas_ocupadas[j] = 0;
+                    j++;
                 }
             }
-
-            // En caso de éxito, la rana actual vuelve sana y salva abajo para la próxima
             game->rana.fila = TABLERO_FILS - 1;
             game->rana.col = TABLERO_COLS / 2;
             resultado = 0; 
         }
     }
-    
     return resultado;
 }
 
-void rana_muere(game_t *game) // Decrementar vidas y volver a fil 15 a la rana 
-{
+void rana_muere(game_t *game) {
     game->vidas--;
-    game->rana.fila = TABLERO_FILS - 1;   // Reinicia fila abajo (15)
-    game->rana.col = TABLERO_COLS / 2; // Reinicia col al medio (8)
+    game->rana.fila = TABLERO_FILS - 1;   
+    game->rana.col = TABLERO_COLS / 2; 
 }

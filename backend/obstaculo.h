@@ -28,21 +28,6 @@ typedef struct {
     Direccion_t dir;
 } Velocidad_t;
 
-typedef struct obstaculo_t {
-    /* Posicion */
-    double x;                   // Posicion x (actual)
-    double y;                   // Posicion y (actual)
-
-    /* Dimensiones */
-    DimensionObstaculo_t dim;
-
-    /* Direccion y rapidez de movimiento */
-    Velocidad_t vel;
-
-    /* Tipo de obstaculo */
-    TipoObstaculo_t tipo;
-}Obstaculo_t;
-
 typedef struct Obstaculo_t * Obstaculo;
 
 Obstaculo nuevo_obstaculo(Coordenada_t coord_inicial, DimensionObstaculo_t dim, Velocidad_t vel, TipoObstaculo_t tipo);

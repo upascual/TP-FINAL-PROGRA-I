@@ -1,20 +1,9 @@
 #ifndef _TABLERO_H_
 #define _TABLERO_H_
 
-#ifdef RASPBERRY
-
-/* TABLERO DE RASPBERRY PI */
+/* TABLERO LÓGICO UNIFICADO (16x16) */
 #define TABLERO_FILS 16
 #define TABLERO_COLS 16
-#define MAX_OBSTACULOS 20
-
-#else
-
-/* TABLERO DE ALLEGRO */
-#define TABLERO_FILS 800
-#define TABLERO_COLS 800
 #define MAX_OBSTACULOS 30
-
-#endif
 
 #endif // _TABLERO_H_

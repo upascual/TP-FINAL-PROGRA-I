@@ -1,29 +1,29 @@
 CC := gcc
-CFLAGS := -Wall -Wextra -g -fsanitize=address
+# Agregamos -Ibackend y -Ifrontend para que encuentre los archivos .h solos
+CFLAGS := -Wall -Wextra -g -fsanitize=address -Ibackend -Ifrontend
 
-ALEGRO_EXEC := frogger-allegro
+ALLEGRO_EXEC := frogger-allegro
 RASPBERRY_EXEC := frogger-raspberry
 
-.PHONY: allegro raspberry backend clean
+# Le aclaramos en qué carpeta está cada cosa
+BACKEND_SRC := main.c backend/juego.c 
+
+ALLEGRO_SRC := frontend/allegro/frontendAllegro.c
+RASPBERRY_SRC := frontend/raspberry/frontendRaspberry.c
+
+.PHONY: default allegro raspberry clean
 
 default:
-	@echo " Especificar \"allegro\" o \"raspberry\" "
+	@echo "Especificar \"make allegro\" o \"make raspberry\""
 
-allegro: backend
-	@echo "Compilando frontend para Allegro..."
-	$(CC) $(CFLAGS) -o $(ALEGRO_EXEC) frogger.c
+allegro:
+	@echo "Compilando versión para Allegro..."
+	$(CC) $(CFLAGS) $(BACKEND_SRC) $(ALLEGRO_SRC) -o $(ALLEGRO_EXEC) -lallegro -lallegro_primitives -lallegro_image -lallegro_font -lallegro_ttf
 
-raspberry: backend
-	@echo "Compilando frontend para Raspberry PI..."
-	$(CC) $(CFLAGS) -D RASPBERRY -o $(RASPBERRY_EXEC) frogger.c
-
-##################################################################
-
-backend:
-	@echo "Compilando backend..."
-
-##################################################################
+raspberry:
+	@echo "Compilando versión para Raspberry PI..."
+	$(CC) $(CFLAGS) -D RASPBERRY $(BACKEND_SRC) $(RASPBERRY_SRC) -o $(RASPBERRY_EXEC)
 
 clean:
-	@echo "Cleaning..."
-	rm *.o
+	@echo "Limpiando ejecutables..."
+	rm -f $(ALLEGRO_EXEC) $(RASPBERRY_EXEC)

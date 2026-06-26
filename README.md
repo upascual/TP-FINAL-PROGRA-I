@@ -1,5 +1,5 @@
--> PROYECTO FINAL PROGRAMACION I ITBA
--> INTEGRANTES:
-             - Guadalupe Vidal
-             - Maximo Ospal
-             - Ulises Pascual
+# progra1-frogger
+
+Proyecto de Programacion 1
+Guadalupe Vidal
+
