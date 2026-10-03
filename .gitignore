@@ -1,0 +1,10 @@
+# Ejecutables y objetos: se generan con make, no van al repo
+# (antes había un frogger-allegro compilado subido al repositorio)
+build/
+frogger-allegro
+frogger-raspberry
+
+# Top 10 local de cada uno
+puntajes.txt
+
+.vscode/

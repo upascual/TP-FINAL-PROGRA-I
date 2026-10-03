@@ -1,0 +1,9 @@
+Copiar en esta carpeta los archivos que da la cátedra para la RasPi:
+
+  disdrv.h   disdrv.o    (display matricial)
+  joydrv.h   joydrv.o    (joystick)
+
+El Makefile los busca acá. Si en su versión los archivos se llaman distinto
+(por ejemplo vienen como .a o con otro nombre), cambiar RASPBERRY_LIBS en el
+Makefile. Si alguna función tiene otro nombre, se ajusta solo en
+frontend/raspberry/frontendRaspberry.c.
